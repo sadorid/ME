@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Birthday Garden</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      text-align: center;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .moon {
+      position: absolute;
+      top: 50px;
+      right: 100px;
+      width: 120px;
+      height: 120px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 40px 10px #fff;
+      z-index: 2;
+    }
+
+    .garden {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(to top, #145c17, transparent);
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .grass-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      pointer-events: none;
+    }
+
+    .grass-blade {
+      width: 2px;
+      height: 30px;
+      background: #0f0;
+      margin: 1px;
+      animation: sway 2s ease-in-out infinite alternate;
+      transform-origin: bottom center;
+    }
+
+    .grass-blade:nth-child(odd) {
+      animation-delay: 0.5s;
+    }
+
+    .flower {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: pink;
+      border-radius: 50%;
+      bottom: 25px;
+    }
+
+    .flower::after {
+      content: "";
+      position: absolute;
+      width: 5px;
+      height: 5px;
+      background: yellow;
+      border-radius: 50%;
+      top: 1px;
+      left: 1px;
+    }
+
+    @keyframes sway {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(10deg); }
+    }
+
+    .boy {
+      position: absolute;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    .boy img {
+      width: 100px;
+      height: auto;
+      animation: float 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes float {
+      from { transform: translateX(-50%) translateY(0); }
+      to { transform: translateX(-50%) translateY(-10px); }
+    }
+
+    .message-box {
+      position: absolute;
+      top: 30%;
+      width: 100%;
+      text-align: center;
+      color: white;
+      z-index: 5;
+      font-size: 20px;
+      padding: 0 20px;
+    }
+
+    .line {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeInUp 1.5s forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .click-instruction {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      font-size: 25px;
+      color: white;
+      z-index: 10;
+      font-weight: bold;
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+    }
+  </style>
+</head>
+<body onclick="startExperience()">
+  <!-- Instruction text -->
+  <div class="click-instruction">Click anywhere to start your special experience!</div>
+
+  <!-- Stars -->
+  <canvas id="stars"></canvas>
+
+  <!-- Audio -->
+  <audio id="bg-music"loop>
+    <source src="mahiya.mp3" type="audio/mp3" />
+    Your browser does not support audio.
+  </audio>
+
+  <!-- Moon -->
+  <div class="moon"></div>
+
+  <!-- Garden -->
+  <div class="garden">
+    <div class="grass-container" id="grass-container"></div>
+    <div class="flower" style="left: 40%;"></div>
+    <div class="flower" style="left: 60%;"></div>
+    <div class="flower" style="left: 70%;"></div>
+  </div>
+
+  <!-- Boy -->
+  <div class="boy">
+    <img src="boy-looking-up.png" alt="Boy Looking at Stars">
+  </div>
+
+  <!-- Message -->
+  <div class="message-box" id="messageBox">
+    <div class="line">Zindagi ke har mod par tu saath thi,</div>
+    <div class="line">Har dard, har takleef mai bas tu hi thi.</div>
+    <div class="line">Tune mujhe  jina sikhaya,</div>
+    <div class="line">Tere pyaar ne har zakhm bhulaya.</div>
+    <div class="line">tera birthday ane wla h ispe sirf ek shabd: Thank you.</div>
+    <div class="line">Shukriya itna  saha tune mujhe or mera sath nhi chora,</div>
+    <div class="line">Shukriya har din mujhe pyaar dene ke liye.</div>
+    <div class="line">Tu meri taaqat bhi hai, tu mera fakhar bhi hai,</div>
+    <div class="line">Tere bina ye gadha adhura gadhi  — yeh sach hai.</div>
+    <div class="line">plskabhi dur mat jana mere se gadhi.</div>
+    <div class="line"> IN ADVANVCE HAPPY BIRTHDAY MERI ZINDAGI, MERI GADHI, MERI SAB KUCH.</div>
+  </div>
+
+  <script>
+    // Star canvas
+    const canvas = document.getElementById("stars");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const stars = Array.from({ length: 200 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5,
+      alpha: Math.random(),
+      delta: Math.random() * 0.02
+    }));
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const star of stars) {
+        star.alpha += star.delta;
+        if (star.alpha >= 1 || star.alpha <= 0) star.delta *= -1;
+        ctx.beginPath();
+        ctx.globalAlpha = star.alpha;
+        ctx.fillStyle = "white";
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawStars);
+    }
+
+    drawStars();
+
+    // Grass
+    const grassContainer = document.getElementById("grass-container");
+    for (let i = 0; i < 200; i++) {
+      const blade = document.createElement("div");
+      blade.classList.add("grass-blade");
+      blade.style.height = `${20 + Math.random() * 20}px`;
+      grassContainer.appendChild(blade);
+    }
+
+    // Animate lines
+    const lines = document.querySelectorAll("#messageBox .line");
+    lines.forEach((line, i) => {
+      line.style.animationDelay = `${i * 3}s`;
+    });
+
+    // Start music and message animation
+    function startExperience() {
+      const audio = document.getElementById("bg-music");
+      audio.play().catch(e => console.log("Autoplay blocked"));
+      
+      // Start shayari animation
+      const lines = document.querySelectorAll("#messageBox .line");
+      lines.forEach((line, i) => {
+        line.style.animationDelay = `${i * 3}s`;
+        line.style.animationPlayState = "running"; // Trigger animation on click
+      });
+
+      // Remove the instruction text once clicked
+      document.querySelector(".click-instruction").style.display = "none";
+
+      document.body.onclick = null; // only trigger once
+    }
+  </script>
+</body>
+</html>
